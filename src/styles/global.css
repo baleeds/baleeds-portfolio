@@ -112,6 +112,10 @@ body.lightbox-open {
   display: none;
 }
 
+.masonry figure.hidden-photo {
+  display: none;
+}
+
 /* Masonry Grid */
 .masonry {
   column-count: 1;

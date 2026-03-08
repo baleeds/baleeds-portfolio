@@ -27,6 +27,7 @@ import Lightbox from '../components/Lightbox.astro';
   // Filter chip logic
   const chips = document.querySelectorAll<HTMLButtonElement>('.chip');
   const sections = document.querySelectorAll<HTMLElement>('.category-section');
+  const figures = document.querySelectorAll<HTMLElement>('.masonry figure');
 
   chips.forEach((chip) => {
     chip.addEventListener('click', () => {
@@ -35,11 +36,22 @@ import Lightbox from '../components/Lightbox.astro';
 
       const filter = chip.dataset.filter;
 
-      sections.forEach((section) => {
-        if (filter === 'all' || section.dataset.category === filter) {
-          section.classList.remove('hidden');
+      // Show/hide individual figures by category
+      figures.forEach((fig) => {
+        if (filter === 'all' || fig.dataset.category === filter) {
+          fig.classList.remove('hidden-photo');
         } else {
+          fig.classList.add('hidden-photo');
+        }
+      });
+
+      // Hide year sections that have no visible photos
+      sections.forEach((section) => {
+        const visiblePhotos = section.querySelectorAll('figure:not(.hidden-photo)');
+        if (visiblePhotos.length === 0) {
           section.classList.add('hidden');
+        } else {
+          section.classList.remove('hidden');
         }
       });
     });
