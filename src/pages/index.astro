@@ -1,0 +1,73 @@
+---
+import Layout from '../layouts/Layout.astro';
+import FilterChips from '../components/FilterChips.astro';
+import Gallery from '../components/Gallery.astro';
+import Lightbox from '../components/Lightbox.astro';
+---
+
+<Layout>
+  <header class="site-header container">
+    <h1>Benjamin Leeds</h1>
+    <p>
+      Photographer based in the Pacific Northwest. I chase light across
+      landscapes, capture people in their element, and document the energy of
+      live events.
+    </p>
+  </header>
+
+  <div class="container">
+    <FilterChips />
+  </div>
+
+  <Gallery />
+  <Lightbox />
+
+  <footer class="site-footer container">
+    <p>&copy; {new Date().getFullYear()} Benjamin Leeds</p>
+  </footer>
+</Layout>
+
+<script>
+  // Filter chip logic
+  const chips = document.querySelectorAll<HTMLButtonElement>('.chip');
+  const sections = document.querySelectorAll<HTMLElement>('.category-section');
+
+  chips.forEach((chip) => {
+    chip.addEventListener('click', () => {
+      chips.forEach((c) => c.classList.remove('active'));
+      chip.classList.add('active');
+
+      const filter = chip.dataset.filter;
+
+      sections.forEach((section) => {
+        if (filter === 'all' || section.dataset.category === filter) {
+          section.classList.remove('hidden');
+        } else {
+          section.classList.add('hidden');
+        }
+      });
+    });
+  });
+
+  // Fade-in on load via IntersectionObserver
+  const images = document.querySelectorAll<HTMLImageElement>('.masonry img');
+
+  const observer = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          const img = entry.target as HTMLImageElement;
+          if (img.complete) {
+            img.classList.add('loaded');
+          } else {
+            img.addEventListener('load', () => img.classList.add('loaded'), { once: true });
+          }
+          observer.unobserve(img);
+        }
+      });
+    },
+    { rootMargin: '50px' },
+  );
+
+  images.forEach((img) => observer.observe(img));
+</script>

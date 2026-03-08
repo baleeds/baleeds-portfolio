@@ -1,0 +1,10 @@
+---
+import { categories, categoryLabels } from '../data/photos';
+---
+
+<div class="filter-chips">
+  <button class="chip active" data-filter="all">All</button>
+  {categories.map((cat) => (
+    <button class="chip" data-filter={cat}>{categoryLabels[cat]}</button>
+  ))}
+</div>

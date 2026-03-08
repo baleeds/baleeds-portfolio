@@ -1,0 +1,44 @@
+---
+---
+
+<div class="lightbox" id="lightbox">
+  <button class="lightbox-close" aria-label="Close lightbox">&times;</button>
+  <img src="" alt="" />
+</div>
+
+<script>
+  const lightbox = document.getElementById('lightbox')!;
+  const lightboxImg = lightbox.querySelector('img')!;
+  const closeBtn = lightbox.querySelector('.lightbox-close')!;
+
+  function openLightbox(src: string, alt: string) {
+    lightboxImg.src = src;
+    lightboxImg.alt = alt;
+    lightbox.classList.add('open');
+    document.body.classList.add('lightbox-open');
+  }
+
+  function closeLightbox() {
+    lightbox.classList.remove('open');
+    document.body.classList.remove('lightbox-open');
+    lightboxImg.src = '';
+  }
+
+  document.querySelectorAll<HTMLElement>('.masonry figure').forEach((fig) => {
+    fig.addEventListener('click', () => {
+      const src = fig.dataset.fullSrc || '';
+      const alt = fig.querySelector('img')?.alt || '';
+      openLightbox(src, alt);
+    });
+  });
+
+  closeBtn.addEventListener('click', closeLightbox);
+
+  lightbox.addEventListener('click', (e) => {
+    if (e.target === lightbox) closeLightbox();
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeLightbox();
+  });
+</script>

@@ -1,0 +1,143 @@
+---
+let error = '';
+
+if (Astro.request.method === 'POST') {
+  const formData = await Astro.request.formData();
+  const password = formData.get('password')?.toString() ?? '';
+  const sitePassword = import.meta.env.SITE_PASSWORD;
+
+  if (password === sitePassword) {
+    const encoder = new TextEncoder();
+    const key = await crypto.subtle.importKey(
+      'raw',
+      encoder.encode(sitePassword),
+      { name: 'HMAC', hash: 'SHA-256' },
+      false,
+      ['sign'],
+    );
+    const signature = await crypto.subtle.sign('HMAC', key, encoder.encode('authenticated'));
+    const token = btoa(String.fromCharCode(...new Uint8Array(signature)));
+
+    const isSecure = new URL(Astro.request.url).protocol === 'https:';
+    const cookie = `auth=${encodeURIComponent(token)}; HttpOnly; SameSite=Lax; Path=/${isSecure ? '; Secure' : ''}; Max-Age=604800`;
+
+    return new Response(null, {
+      status: 302,
+      headers: {
+        Location: '/',
+        'Set-Cookie': cookie,
+      },
+    });
+  } else {
+    error = 'Incorrect password.';
+  }
+}
+---
+
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Login</title>
+    <style>
+      *, *::before, *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      html {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+          Oxygen-Sans, Ubuntu, Cantarell, 'Helvetica Neue', sans-serif;
+        color: #1a1a1a;
+        background: #fafafa;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      body {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .login-card {
+        width: 100%;
+        max-width: 360px;
+        padding: 2.5rem 2rem;
+        text-align: center;
+      }
+
+      .login-card h1 {
+        font-size: 1.5rem;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+        margin-bottom: 0.5rem;
+      }
+
+      .login-card p {
+        font-size: 0.95rem;
+        color: #666;
+        margin-bottom: 2rem;
+        line-height: 1.5;
+      }
+
+      .login-card input[type="password"] {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        font-size: 1rem;
+        font-family: inherit;
+        border: 1.5px solid #ddd;
+        border-radius: 8px;
+        outline: none;
+        transition: border-color 0.2s;
+        margin-bottom: 1rem;
+      }
+
+      .login-card input[type="password"]:focus {
+        border-color: #1a1a1a;
+      }
+
+      .login-card button {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        font-size: 1rem;
+        font-family: inherit;
+        font-weight: 600;
+        background: #1a1a1a;
+        color: #fff;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: background 0.2s;
+      }
+
+      .login-card button:hover {
+        background: #333;
+      }
+
+      .error {
+        color: #c0392b;
+        font-size: 0.875rem;
+        margin-bottom: 1rem;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="login-card">
+      <h1>Portfolio</h1>
+      <p>Enter the password to view.</p>
+      {error && <div class="error">{error}</div>}
+      <form method="POST">
+        <input
+          type="password"
+          name="password"
+          placeholder="Password"
+          autofocus
+          required
+        />
+        <button type="submit">Enter</button>
+      </form>
+    </div>
+  </body>
+</html>

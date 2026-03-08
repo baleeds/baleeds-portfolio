@@ -1,0 +1,33 @@
+---
+import { Image } from 'astro:assets';
+import { photos, categories, categoryLabels, type Category } from '../data/photos';
+
+const grouped = categories.reduce(
+  (acc, cat) => {
+    acc[cat] = photos.filter((p) => p.category === cat);
+    return acc;
+  },
+  {} as Record<Category, typeof photos>,
+);
+---
+
+{categories.map((cat) => (
+  <section class="category-section" data-category={cat}>
+    <div class="container">
+      <h2>{categoryLabels[cat]}</h2>
+      <div class="masonry">
+        {grouped[cat].map((photo) => (
+          <figure data-full-src={photo.src.src}>
+            <Image
+              src={photo.src}
+              alt={photo.alt}
+              widths={[400, 800, 1200]}
+              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+              loading="lazy"
+            />
+          </figure>
+        ))}
+      </div>
+    </div>
+  </section>
+))}
