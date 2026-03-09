@@ -102,6 +102,8 @@
     track.style.transform = `translate(${trackOffset + originX}px, ${originY}px)`;
   }
 
+  const MAX_ORIGIN_DISTANCE = 350;
+
   function getOriginDelta(figIndex: number): { deltaX: number; deltaY: number } {
     const figures = getVisibleFigures();
     if (figIndex < 0 || figIndex >= figures.length) return { deltaX: 0, deltaY: 0 };
@@ -111,7 +113,15 @@
     const figCenterY = rect.top + rect.height / 2;
     const vpCenterX = window.innerWidth / 2;
     const vpCenterY = window.innerHeight / 2;
-    return { deltaX: figCenterX - vpCenterX, deltaY: figCenterY - vpCenterY };
+    let deltaX = figCenterX - vpCenterX;
+    let deltaY = figCenterY - vpCenterY;
+    const dist = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+    if (dist > MAX_ORIGIN_DISTANCE) {
+      const scale = MAX_ORIGIN_DISTANCE / dist;
+      deltaX *= scale;
+      deltaY *= scale;
+    }
+    return { deltaX, deltaY };
   }
 
   // === Slide loading ===
