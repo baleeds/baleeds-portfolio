@@ -13,8 +13,8 @@
   <div class="lightbox-content">
     <img src="" alt="" />
     <div class="lightbox-meta">
-      <span class="lightbox-meta-alt"></span>
-      <span class="lightbox-meta-details"></span>
+      <span class="lightbox-meta-specs"></span>
+      <span class="lightbox-meta-camera"></span>
     </div>
   </div>
   <div class="lightbox-counter"></div>
@@ -26,8 +26,8 @@
   const closeBtn = lightbox.querySelector('.lightbox-close')!;
   const prevBtn = lightbox.querySelector('.lightbox-prev')!;
   const nextBtn = lightbox.querySelector('.lightbox-next')!;
-  const metaAlt = lightbox.querySelector('.lightbox-meta-alt')!;
-  const metaDetails = lightbox.querySelector('.lightbox-meta-details')!;
+  const metaSpecs = lightbox.querySelector('.lightbox-meta-specs')!;
+  const metaCamera = lightbox.querySelector('.lightbox-meta-camera')!;
   const counter = lightbox.querySelector('.lightbox-counter')!;
 
   let currentIndex = -1;
@@ -38,19 +38,6 @@
     );
   }
 
-  function formatDate(dateStr: string): string {
-    const date = new Date(dateStr + 'T00:00:00');
-    return date.toLocaleDateString('en-US', {
-      month: 'long',
-      day: 'numeric',
-      year: 'numeric',
-    });
-  }
-
-  function formatCategory(cat: string): string {
-    return cat.charAt(0).toUpperCase() + cat.slice(1);
-  }
-
   function showPhoto(index: number) {
     const figures = getVisibleFigures();
     if (index < 0 || index >= figures.length) return;
@@ -59,13 +46,19 @@
     const fig = figures[index];
     const src = fig.dataset.fullSrc || '';
     const alt = fig.dataset.alt || '';
-    const date = fig.dataset.date || '';
-    const category = fig.dataset.category || '';
+    const shutter = fig.dataset.shutter || '';
+    const aperture = fig.dataset.aperture || '';
+    const iso = fig.dataset.iso || '';
+    const focalLength = fig.dataset.focalLength || '';
+    const camera = fig.dataset.camera || '';
 
     lightboxImg.src = src;
     lightboxImg.alt = alt;
-    metaAlt.textContent = alt;
-    metaDetails.textContent = `${formatDate(date)}  ·  ${formatCategory(category)}`;
+
+    const shutterDisplay = shutter ? (shutter.includes('/') ? `${shutter}s` : shutter) : '';
+    const specs = [focalLength, aperture, shutterDisplay, iso ? `ISO ${iso}` : ''].filter(Boolean);
+    metaSpecs.textContent = specs.join('  ·  ');
+    metaCamera.textContent = camera?.startsWith('X-') ? `Fujifilm ${camera}` : camera;
     counter.textContent = `${index + 1} / ${figures.length}`;
 
     prevBtn.classList.toggle('hidden', index === 0);

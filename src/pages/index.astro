@@ -1,13 +1,18 @@
 ---
+import { Image } from 'astro:assets';
 import Layout from '../layouts/Layout.astro';
 import FilterChips from '../components/FilterChips.astro';
 import Gallery from '../components/Gallery.astro';
 import Lightbox from '../components/Lightbox.astro';
+import headshot from '../assets/photos/headshot.jpg';
 ---
 
 <Layout>
   <header class="site-header container">
-    <h1>Benjamin Leeds</h1>
+    <div class="header-identity">
+      <Image src={headshot} alt="Benjamin Leeds" class="avatar" width={80} height={80} />
+      <h1>Benjamin Leeds</h1>
+    </div>
     <p>I just enjoy taking pictures. Mostly of my family, but sometimes of creation.</p>
   </header>
 
