@@ -14,6 +14,14 @@ const { title = 'Benjamin Leeds — Photography' } = Astro.props;
     <meta name="description" content="Photography portfolio of Benjamin Leeds — Landscapes, People, and Events." />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <title>{title}</title>
+    <script is:inline>
+      (function() {
+        const stored = localStorage.getItem('theme');
+        if (stored === 'dark' || (!stored && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+          document.documentElement.classList.add('dark');
+        }
+      })();
+    </script>
   </head>
   <body>
     <slot />

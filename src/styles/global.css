@@ -15,7 +15,25 @@
   --chip-active-bg: #1a1a1a;
   --chip-active-text: #fff;
   --max-width: 1200px;
-  --overlay-bg: rgba(0, 0, 0, 0.9);
+  --overlay-bg: #000;
+  --overlay-text: rgba(255, 255, 255, 0.85);
+  --overlay-text-bright: #fff;
+  --overlay-text-dim: rgba(255, 255, 255, 0.45);
+  --overlay-counter: rgba(255, 255, 255, 0.5);
+}
+
+html.dark {
+  --bg: #111;
+  --text: #e5e5e5;
+  --text-muted: #999;
+  --border: #333;
+  --chip-active-bg: #e5e5e5;
+  --chip-active-text: #111;
+  --overlay-bg: #fff;
+  --overlay-text: rgba(0, 0, 0, 0.75);
+  --overlay-text-bright: #000;
+  --overlay-text-dim: rgba(0, 0, 0, 0.45);
+  --overlay-counter: rgba(0, 0, 0, 0.5);
 }
 
 html {
@@ -24,6 +42,7 @@ html {
   color: var(--text);
   background: var(--bg);
   -webkit-font-smoothing: antialiased;
+  transition: color 0.3s, background 0.3s;
 }
 
 body {
@@ -76,6 +95,40 @@ body.lightbox-open {
   margin: 0 auto;
   line-height: 1.6;
 }
+
+/* Dark Mode Toggle */
+.theme-toggle {
+  position: absolute;
+  top: 1.5rem;
+  right: 1.5rem;
+  appearance: none;
+  background: none;
+  border: 1.5px solid var(--border);
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  transition: color 0.2s, border-color 0.2s;
+}
+
+.theme-toggle:hover {
+  color: var(--text);
+  border-color: var(--text);
+}
+
+.theme-toggle svg {
+  width: 18px;
+  height: 18px;
+}
+
+.theme-toggle .icon-moon { display: block; }
+.theme-toggle .icon-sun { display: none; }
+html.dark .theme-toggle .icon-moon { display: none; }
+html.dark .theme-toggle .icon-sun { display: block; }
 
 /* Filter Chips */
 .filter-chips {
@@ -215,19 +268,19 @@ body.lightbox-open {
   align-items: center;
   gap: 0.2rem;
   padding-top: 0.75rem;
-  color: rgba(255, 255, 255, 0.85);
+  color: var(--overlay-text);
   font-size: 0.85rem;
   text-align: center;
 }
 
 .lightbox-meta-specs {
   font-weight: 500;
-  color: #fff;
+  color: var(--overlay-text-bright);
   letter-spacing: 0.02em;
 }
 
 .lightbox-meta-camera {
-  color: rgba(255, 255, 255, 0.45);
+  color: var(--overlay-text-dim);
   font-size: 0.75rem;
 }
 
@@ -238,7 +291,7 @@ body.lightbox-open {
   appearance: none;
   background: none;
   border: none;
-  color: #fff;
+  color: var(--overlay-text-bright);
   cursor: pointer;
   padding: 0.5rem;
   opacity: 0.6;
@@ -260,7 +313,7 @@ body.lightbox-open {
   appearance: none;
   background: none;
   border: none;
-  color: #fff;
+  color: var(--overlay-text-bright);
   font-size: 3rem;
   cursor: pointer;
   padding: 1rem;
@@ -291,7 +344,7 @@ body.lightbox-open {
   position: absolute;
   top: 1.25rem;
   left: 1.5rem;
-  color: rgba(255, 255, 255, 0.5);
+  color: var(--overlay-counter);
   font-size: 0.8rem;
   font-variant-numeric: tabular-nums;
 }
