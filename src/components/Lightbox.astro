@@ -2,18 +2,78 @@
 ---
 
 <div class="lightbox" id="lightbox">
-  <button class="lightbox-close" aria-label="Close lightbox">&times;</button>
-  <img src="" alt="" />
+  <button class="lightbox-close" aria-label="Close lightbox">
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+      <line x1="4" y1="4" x2="16" y2="16" />
+      <line x1="16" y1="4" x2="4" y2="16" />
+    </svg>
+  </button>
+  <button class="lightbox-nav lightbox-prev" aria-label="Previous photo">&#8249;</button>
+  <button class="lightbox-nav lightbox-next" aria-label="Next photo">&#8250;</button>
+  <div class="lightbox-content">
+    <img src="" alt="" />
+    <div class="lightbox-meta">
+      <span class="lightbox-meta-alt"></span>
+      <span class="lightbox-meta-details"></span>
+    </div>
+  </div>
+  <div class="lightbox-counter"></div>
 </div>
 
 <script>
   const lightbox = document.getElementById('lightbox')!;
-  const lightboxImg = lightbox.querySelector('img')!;
+  const lightboxImg = lightbox.querySelector('.lightbox-content img')!;
   const closeBtn = lightbox.querySelector('.lightbox-close')!;
+  const prevBtn = lightbox.querySelector('.lightbox-prev')!;
+  const nextBtn = lightbox.querySelector('.lightbox-next')!;
+  const metaAlt = lightbox.querySelector('.lightbox-meta-alt')!;
+  const metaDetails = lightbox.querySelector('.lightbox-meta-details')!;
+  const counter = lightbox.querySelector('.lightbox-counter')!;
 
-  function openLightbox(src: string, alt: string) {
+  let currentIndex = -1;
+
+  function getVisibleFigures(): HTMLElement[] {
+    return Array.from(
+      document.querySelectorAll<HTMLElement>('.masonry figure:not(.hidden-photo)')
+    );
+  }
+
+  function formatDate(dateStr: string): string {
+    const date = new Date(dateStr + 'T00:00:00');
+    return date.toLocaleDateString('en-US', {
+      month: 'long',
+      day: 'numeric',
+      year: 'numeric',
+    });
+  }
+
+  function formatCategory(cat: string): string {
+    return cat.charAt(0).toUpperCase() + cat.slice(1);
+  }
+
+  function showPhoto(index: number) {
+    const figures = getVisibleFigures();
+    if (index < 0 || index >= figures.length) return;
+
+    currentIndex = index;
+    const fig = figures[index];
+    const src = fig.dataset.fullSrc || '';
+    const alt = fig.dataset.alt || '';
+    const date = fig.dataset.date || '';
+    const category = fig.dataset.category || '';
+
     lightboxImg.src = src;
     lightboxImg.alt = alt;
+    metaAlt.textContent = alt;
+    metaDetails.textContent = `${formatDate(date)}  ·  ${formatCategory(category)}`;
+    counter.textContent = `${index + 1} / ${figures.length}`;
+
+    prevBtn.classList.toggle('hidden', index === 0);
+    nextBtn.classList.toggle('hidden', index === figures.length - 1);
+  }
+
+  function openLightbox(index: number) {
+    showPhoto(index);
     lightbox.classList.add('open');
     document.body.classList.add('lightbox-open');
   }
@@ -21,24 +81,57 @@
   function closeLightbox() {
     lightbox.classList.remove('open');
     document.body.classList.remove('lightbox-open');
+    currentIndex = -1;
     lightboxImg.src = '';
   }
 
+  function navigate(direction: number) {
+    const figures = getVisibleFigures();
+    const newIndex = currentIndex + direction;
+    if (newIndex >= 0 && newIndex < figures.length) {
+      showPhoto(newIndex);
+    }
+  }
+
+  // Click handlers on gallery figures
   document.querySelectorAll<HTMLElement>('.masonry figure').forEach((fig) => {
     fig.addEventListener('click', () => {
-      const src = fig.dataset.fullSrc || '';
-      const alt = fig.querySelector('img')?.alt || '';
-      openLightbox(src, alt);
+      const figures = getVisibleFigures();
+      const index = figures.indexOf(fig);
+      if (index !== -1) openLightbox(index);
     });
   });
 
   closeBtn.addEventListener('click', closeLightbox);
+  prevBtn.addEventListener('click', () => navigate(-1));
+  nextBtn.addEventListener('click', () => navigate(1));
 
   lightbox.addEventListener('click', (e) => {
     if (e.target === lightbox) closeLightbox();
   });
 
   document.addEventListener('keydown', (e) => {
+    if (!lightbox.classList.contains('open')) return;
     if (e.key === 'Escape') closeLightbox();
+    if (e.key === 'ArrowLeft') navigate(-1);
+    if (e.key === 'ArrowRight') navigate(1);
   });
+
+  // Touch swipe support
+  let touchStartX = 0;
+  let touchStartY = 0;
+
+  lightbox.addEventListener('touchstart', (e) => {
+    touchStartX = e.touches[0].clientX;
+    touchStartY = e.touches[0].clientY;
+  }, { passive: true });
+
+  lightbox.addEventListener('touchend', (e) => {
+    const dx = e.changedTouches[0].clientX - touchStartX;
+    const dy = e.changedTouches[0].clientY - touchStartY;
+    if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy)) {
+      if (dx > 0) navigate(-1);
+      else navigate(1);
+    }
+  }, { passive: true });
 </script>

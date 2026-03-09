@@ -19,7 +19,7 @@ const groupedByYear = years.reduce(
       <h2>{year}</h2>
       <div class="masonry">
         {groupedByYear[year].map((photo) => (
-          <figure data-full-src={photo.src.src} data-category={photo.category}>
+          <figure data-full-src={photo.src.src} data-category={photo.category} data-alt={photo.alt} data-date={photo.date}>
             <Image
               src={photo.src}
               alt={photo.alt}
