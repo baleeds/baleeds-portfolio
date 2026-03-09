@@ -26,7 +26,6 @@ import mountains4 from '../assets/photos/landscapes/parkway-2024-451.jpg'
 import mountains5 from '../assets/photos/landscapes/parkway-2024-454.jpg'
 import nic1 from '../assets/photos/landscapes/nicaragua-spring15-13.jpg'
 import northernLights from '../assets/photos/landscapes/northern-lights-2024-184.jpg'
-import southDakota1 from '../assets/photos/landscapes/south-dakota-2024-250.jpg'
 import southDakota2 from '../assets/photos/landscapes/south-dakota-2024-252.jpg'
 import southDakota3 from '../assets/photos/landscapes/south-dakota-2024-258.jpg'
 import southDakota4 from '../assets/photos/landscapes/south-dakota-2024-283.jpg'
@@ -52,7 +51,6 @@ import grad1 from '../assets/photos/people/grad-web-2.jpg';
 import maxKimmy1 from '../assets/photos/people/max-and-kimmy-824.jpg';
 import maxKimmy2 from '../assets/photos/people/max-and-kimmy-846.jpg';
 import maxKimmy3 from '../assets/photos/people/max-and-kimmy-831.jpg';
-import mothersDay1 from '../assets/photos/people/mothers-day-2025-928.jpg';
 import mountainsPeople1 from '../assets/photos/people/mountains-2024-443.jpg';
 import nicPeople1 from '../assets/photos/people/nicaragua-spring15-78.jpg';
 import nicPeople2 from '../assets/photos/people/nicaragua-spring15-109.jpg';
@@ -104,7 +102,6 @@ export const photos: Photo[] = [
   { src: northernLights, category: 'landscapes', alt: 'Northern lights in night sky', date: '2024-05-11' },
   { src: southDakota3, category: 'landscapes', alt: 'Open plains at sunset', date: '2024-05-10' },
   { src: southDakota2, category: 'landscapes', alt: 'Badlands rock formations', date: '2024-05-10' },
-  { src: southDakota1, category: 'landscapes', alt: 'Prairie landscape', date: '2024-05-10' },
   { src: glacier3, category: 'landscapes', alt: 'Mountain lake reflection', date: '2019-07-24' },
   { src: glacier2, category: 'landscapes', alt: 'Rolling green hills at dawn', date: '2019-07-24' },
   { src: glacier1, category: 'landscapes', alt: 'Coastal cliffs and ocean waves', date: '2019-07-22' },
@@ -127,7 +124,6 @@ export const photos: Photo[] = [
   { src: fall3, category: 'people', alt: 'Fall foliage portrait', date: '2025-11-01' },
   { src: fall2, category: 'people', alt: 'Hiking trail candid', date: '2025-11-01' },
   { src: summer1, category: 'people', alt: 'Summer outdoor portrait', date: '2025-07-30' },
-  { src: mothersDay1, category: 'people', alt: 'Family portrait on Mothers Day', date: '2025-05-11' },
   { src: easter1, category: 'people', alt: 'Easter gathering portrait', date: '2025-04-19' },
   { src: denverPeople1, category: 'people', alt: 'Portrait in urban setting', date: '2025-03-23' },
   { src: snowDay1, category: 'people', alt: 'Snow day candid photo', date: '2024-11-22' },
