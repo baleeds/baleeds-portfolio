@@ -11,120 +11,501 @@
   <button class="lightbox-nav lightbox-prev" aria-label="Previous photo">&#8249;</button>
   <button class="lightbox-nav lightbox-next" aria-label="Next photo">&#8250;</button>
   <div class="lightbox-content">
-    <img src="" alt="" />
-    <div class="lightbox-meta">
-      <span class="lightbox-meta-specs"></span>
-      <span class="lightbox-meta-camera"></span>
+    <div class="lightbox-track">
+      <div class="lightbox-slide">
+        <img src="" alt="" />
+        <div class="lightbox-meta">
+          <span class="lightbox-meta-specs"></span>
+          <span class="lightbox-meta-camera"></span>
+        </div>
+      </div>
+      <div class="lightbox-slide">
+        <img src="" alt="" />
+        <div class="lightbox-meta">
+          <span class="lightbox-meta-specs"></span>
+          <span class="lightbox-meta-camera"></span>
+        </div>
+      </div>
+      <div class="lightbox-slide">
+        <img src="" alt="" />
+        <div class="lightbox-meta">
+          <span class="lightbox-meta-specs"></span>
+          <span class="lightbox-meta-camera"></span>
+        </div>
+      </div>
     </div>
   </div>
   <div class="lightbox-counter"></div>
 </div>
 
 <script>
+  // === Constants ===
+  const SLIDE_GAP = 40;
+  const SWIPE_THRESHOLD = 60;
+  const VELOCITY_THRESHOLD = 0.3;
+  const DISMISS_THRESHOLD = 100;
+  const RUBBER_BAND_FACTOR = 0.3;
+  const ANIM_DURATION = 320;
+
+  // === DOM refs ===
   const lightbox = document.getElementById('lightbox')!;
-  const lightboxImg = lightbox.querySelector('.lightbox-content img')!;
   const closeBtn = lightbox.querySelector('.lightbox-close')!;
   const prevBtn = lightbox.querySelector('.lightbox-prev')!;
   const nextBtn = lightbox.querySelector('.lightbox-next')!;
-  const metaSpecs = lightbox.querySelector('.lightbox-meta-specs')!;
-  const metaCamera = lightbox.querySelector('.lightbox-meta-camera')!;
   const counter = lightbox.querySelector('.lightbox-counter')!;
+  const content = lightbox.querySelector('.lightbox-content') as HTMLElement;
+  const track = lightbox.querySelector('.lightbox-track') as HTMLElement;
+  let slides = Array.from(lightbox.querySelectorAll('.lightbox-slide')) as HTMLElement[];
 
+  // === State ===
   let currentIndex = -1;
+  let trackOffset = 0;
+  let dismissOffset = 0;
+  let isAnimating = false;
+  let animationId: number | null = null;
 
+  // Gesture state
+  let gestureState: 'none' | 'undecided' | 'horizontal' | 'vertical' = 'none';
+  let pointerStartX = 0;
+  let pointerStartY = 0;
+  let pointerStartTime = 0;
+  let lastPointerX = 0;
+  let lastPointerY = 0;
+  let lastPointerTime = 0;
+  let trackOffsetAtStart = 0;
+  let dismissOffsetAtStart = 0;
+
+  // === Helpers ===
   function getVisibleFigures(): HTMLElement[] {
     return Array.from(
       document.querySelectorAll<HTMLElement>('.masonry figure:not(.hidden-photo)')
     );
   }
 
-  function showPhoto(index: number) {
-    const figures = getVisibleFigures();
-    if (index < 0 || index >= figures.length) return;
-
-    currentIndex = index;
-    const fig = figures[index];
-    const src = fig.dataset.fullSrc || '';
-    const alt = fig.dataset.alt || '';
+  function getFigData(fig: HTMLElement) {
     const shutter = fig.dataset.shutter || '';
-    const aperture = fig.dataset.aperture || '';
-    const iso = fig.dataset.iso || '';
-    const focalLength = fig.dataset.focalLength || '';
-    const camera = fig.dataset.camera || '';
-
-    lightboxImg.src = src;
-    lightboxImg.alt = alt;
-
     const shutterDisplay = shutter ? (shutter.includes('/') ? `${shutter}s` : shutter) : '';
-    const specs = [focalLength, aperture, shutterDisplay, iso ? `ISO ${iso}` : ''].filter(Boolean);
-    metaSpecs.textContent = specs.join('  ·  ');
-    metaCamera.textContent = camera?.startsWith('X-') ? `Fujifilm ${camera}` : camera;
-    counter.textContent = `${index + 1} / ${figures.length}`;
-
-    prevBtn.classList.toggle('hidden', index === 0);
-    nextBtn.classList.toggle('hidden', index === figures.length - 1);
+    const iso = fig.dataset.iso || '';
+    const camera = fig.dataset.camera || '';
+    return {
+      src: fig.dataset.fullSrc || '',
+      alt: fig.dataset.alt || '',
+      specs: [fig.dataset.focalLength, fig.dataset.aperture, shutterDisplay, iso ? `ISO ${iso}` : ''].filter(Boolean).join('  ·  '),
+      camera: camera?.startsWith('X-') ? `Fujifilm ${camera}` : camera,
+    };
   }
 
-  function openLightbox(index: number) {
-    showPhoto(index);
-    lightbox.classList.add('open');
-    document.body.classList.add('lightbox-open');
+  function restOffset(): number {
+    return -(window.innerWidth + SLIDE_GAP);
   }
 
-  function closeLightbox() {
-    lightbox.classList.remove('open');
-    document.body.classList.remove('lightbox-open');
-    currentIndex = -1;
-    lightboxImg.src = '';
+  function applyTrackTransform() {
+    track.style.transform = `translateX(${trackOffset}px) translateY(${dismissOffset}px)`;
+    const dismissFade = Math.max(0, 1 - Math.abs(dismissOffset) / 100);
+    lightbox.style.setProperty('--bg-opacity', String(dismissFade));
+    lightbox.style.setProperty('--ui-opacity', String(dismissFade));
+    track.style.opacity = String(dismissFade);
   }
 
-  function navigate(direction: number) {
+  // === Slide loading ===
+  function loadSlide(slideIndex: number, figIndex: number) {
     const figures = getVisibleFigures();
-    const newIndex = currentIndex + direction;
-    if (newIndex >= 0 && newIndex < figures.length) {
-      showPhoto(newIndex);
+    const slide = slides[slideIndex];
+    const img = slide.querySelector('img') as HTMLImageElement;
+    const specs = slide.querySelector('.lightbox-meta-specs')!;
+    const camera = slide.querySelector('.lightbox-meta-camera')!;
+
+    if (figIndex >= 0 && figIndex < figures.length) {
+      const data = getFigData(figures[figIndex]);
+      img.src = data.src;
+      img.alt = data.alt;
+      specs.textContent = data.specs;
+      camera.textContent = data.camera;
+    } else {
+      img.src = '';
+      img.alt = '';
+      specs.textContent = '';
+      camera.textContent = '';
     }
   }
 
-  // Click handlers on gallery figures
+  function loadAllSlides(index: number) {
+    loadSlide(0, index - 1);
+    loadSlide(1, index);
+    loadSlide(2, index + 1);
+  }
+
+  function completeNavigation(newIndex: number, direction: number) {
+    currentIndex = newIndex;
+
+    if (direction === 1) {
+      // Navigated next — slides[2] is visible, recycle slides[0] to the end
+      const recycled = slides.shift()!;
+      track.appendChild(recycled);
+      slides.push(recycled);
+    } else {
+      // Navigated prev — slides[0] is visible, recycle slides[2] to the start
+      const recycled = slides.pop()!;
+      track.insertBefore(recycled, slides[0]);
+      slides.unshift(recycled);
+    }
+
+    // Compensate track offset so the visible slide doesn't move
+    trackOffset = restOffset();
+    applyTrackTransform();
+
+    // Update only the recycled (off-screen) slides
+    loadSlide(0, currentIndex - 1);
+    loadSlide(2, currentIndex + 1);
+    updateChrome();
+  }
+
+  function updateChrome() {
+    const figures = getVisibleFigures();
+    counter.textContent = `${currentIndex + 1} / ${figures.length}`;
+    prevBtn.classList.toggle('hidden', currentIndex === 0);
+    nextBtn.classList.toggle('hidden', currentIndex === figures.length - 1);
+  }
+
+  // === Animation engine (ease-out, no overshoot) ===
+  function easeOutCubic(t: number): number {
+    return 1 - Math.pow(1 - t, 3);
+  }
+
+  function tweenAnimate(
+    from: number[],
+    to: number[],
+    duration: number,
+    onUpdate: (values: number[]) => void,
+    onComplete: () => void
+  ) {
+    cancelAnimation();
+    isAnimating = true;
+    const startTime = performance.now();
+
+    function tick(now: number) {
+      const elapsed = now - startTime;
+      const t = Math.min(1, elapsed / duration);
+      const eased = easeOutCubic(t);
+
+      const values = from.map((f, i) => f + (to[i] - f) * eased);
+      onUpdate(values);
+
+      if (t < 1) {
+        animationId = requestAnimationFrame(tick);
+      } else {
+        onUpdate(to);
+        isAnimating = false;
+        animationId = null;
+        onComplete();
+      }
+    }
+
+    animationId = requestAnimationFrame(tick);
+  }
+
+  function cancelAnimation() {
+    if (animationId !== null) {
+      cancelAnimationFrame(animationId);
+      animationId = null;
+      isAnimating = false;
+    }
+  }
+
+  // === Navigation ===
+  function navigateTo(direction: number) {
+    const figures = getVisibleFigures();
+    const newIndex = currentIndex + direction;
+    if (newIndex < 0 || newIndex >= figures.length) return;
+    if (isAnimating) return;
+
+    const target = direction === -1 ? 0 : -(2 * (window.innerWidth + SLIDE_GAP));
+
+    tweenAnimate(
+      [trackOffset],
+      [target],
+      ANIM_DURATION,
+      ([val]) => {
+        trackOffset = val;
+        applyTrackTransform();
+      },
+      () => completeNavigation(newIndex, direction)
+    );
+  }
+
+  // === Open / Close ===
+  function openLightbox(index: number) {
+    currentIndex = index;
+    loadAllSlides(index);
+    updateChrome();
+
+    trackOffset = restOffset();
+    dismissOffset = 30;
+    lightbox.style.setProperty('--bg-opacity', '0');
+    applyTrackTransform();
+
+    lightbox.classList.add('open');
+    document.body.classList.add('lightbox-open');
+
+    tweenAnimate(
+      [30, 0],
+      [0, 1],
+      ANIM_DURATION,
+      ([dOffset, fade]) => {
+        dismissOffset = dOffset;
+        const f = String(Math.min(1, Math.max(0, fade)));
+        lightbox.style.setProperty('--bg-opacity', f);
+        lightbox.style.setProperty('--ui-opacity', f);
+        track.style.opacity = f;
+        track.style.transform = `translateX(${trackOffset}px) translateY(${dismissOffset}px)`;
+      },
+      () => {
+        dismissOffset = 0;
+        track.style.opacity = '1';
+        lightbox.style.setProperty('--bg-opacity', '1');
+        lightbox.style.setProperty('--ui-opacity', '1');
+        applyTrackTransform();
+      }
+    );
+  }
+
+  function closeLightbox(animated: boolean = true) {
+    if (!lightbox.classList.contains('open')) return;
+
+    if (!animated) {
+      lightbox.classList.remove('open');
+      document.body.classList.remove('lightbox-open');
+      currentIndex = -1;
+      track.style.opacity = '1';
+      lightbox.style.setProperty('--bg-opacity', '1');
+      lightbox.style.setProperty('--ui-opacity', '1');
+      cancelAnimation();
+      return;
+    }
+
+    const startDismiss = dismissOffset;
+    const startBgOp = parseFloat(lightbox.style.getPropertyValue('--bg-opacity') || '1');
+
+    tweenAnimate(
+      [startDismiss, startBgOp, 1],
+      [startDismiss + 100, 0, 0],
+      ANIM_DURATION,
+      ([dOffset, bgOp, trackOp]) => {
+        dismissOffset = dOffset;
+        const bg = String(Math.min(1, Math.max(0, bgOp)));
+        const tr = String(Math.min(1, Math.max(0, trackOp)));
+        lightbox.style.setProperty('--bg-opacity', bg);
+        lightbox.style.setProperty('--ui-opacity', tr);
+        track.style.opacity = tr;
+        track.style.transform = `translateX(${trackOffset}px) translateY(${dismissOffset}px)`;
+      },
+      () => {
+        lightbox.classList.remove('open');
+        document.body.classList.remove('lightbox-open');
+        currentIndex = -1;
+        dismissOffset = 0;
+        track.style.opacity = '1';
+        lightbox.style.setProperty('--bg-opacity', '1');
+        lightbox.style.setProperty('--ui-opacity', '1');
+      }
+    );
+  }
+
+  // === Gesture system (pointer events) ===
+  content.addEventListener('pointerdown', (e) => {
+    if (e.button !== 0) return;
+
+    cancelAnimation();
+    // Snap to current animated position
+    const computedTransform = getComputedStyle(track).transform;
+
+    gestureState = 'undecided';
+    pointerStartX = e.clientX;
+    pointerStartY = e.clientY;
+    pointerStartTime = e.timeStamp;
+    lastPointerX = e.clientX;
+    lastPointerY = e.clientY;
+    lastPointerTime = e.timeStamp;
+    trackOffsetAtStart = trackOffset;
+    dismissOffsetAtStart = dismissOffset;
+
+    content.setPointerCapture(e.pointerId);
+  });
+
+  content.addEventListener('pointermove', (e) => {
+    if (gestureState === 'none') return;
+
+    const dx = e.clientX - pointerStartX;
+    const dy = e.clientY - pointerStartY;
+
+    if (gestureState === 'undecided') {
+      if (Math.abs(dx) > 10 || Math.abs(dy) > 10) {
+        gestureState = Math.abs(dx) >= Math.abs(dy) ? 'horizontal' : 'vertical';
+      } else {
+        return;
+      }
+    }
+
+    lastPointerX = e.clientX;
+    lastPointerY = e.clientY;
+    lastPointerTime = e.timeStamp;
+
+    if (gestureState === 'horizontal') {
+      const figures = getVisibleFigures();
+      let rawOffset = trackOffsetAtStart + dx;
+      const rest = restOffset();
+
+      // Rubber-band at boundaries
+      const minOffset = -(2 * (window.innerWidth + SLIDE_GAP)); // next slide
+      const maxOffset = 0; // prev slide
+
+      const atFirst = currentIndex === 0 && rawOffset > rest;
+      const atLast = currentIndex === figures.length - 1 && rawOffset < rest;
+
+      if (atFirst) {
+        const overscroll = rawOffset - rest;
+        rawOffset = rest + overscroll * RUBBER_BAND_FACTOR;
+      } else if (atLast) {
+        const overscroll = rawOffset - rest;
+        rawOffset = rest + overscroll * RUBBER_BAND_FACTOR;
+      }
+
+      trackOffset = rawOffset;
+      applyTrackTransform();
+    } else if (gestureState === 'vertical') {
+      if (dy > 0) {
+        // Downward — full tracking
+        dismissOffset = dismissOffsetAtStart + dy;
+      } else {
+        // Upward — dampened
+        dismissOffset = dismissOffsetAtStart + dy * RUBBER_BAND_FACTOR;
+      }
+      applyTrackTransform();
+    }
+  });
+
+  content.addEventListener('pointerup', (e) => {
+    if (gestureState === 'none') return;
+
+    const dx = e.clientX - pointerStartX;
+    const dy = e.clientY - pointerStartY;
+    const dt = Math.max(1, e.timeStamp - lastPointerTime);
+    const velocityX = (e.clientX - lastPointerX) / dt;
+    const velocityY = (e.clientY - lastPointerY) / dt;
+
+    if (gestureState === 'undecided') {
+      // Treat as tap — don't interfere
+      gestureState = 'none';
+      return;
+    }
+
+    if (gestureState === 'horizontal') {
+      const figures = getVisibleFigures();
+      const rest = restOffset();
+      let direction = 0;
+
+      if ((Math.abs(dx) > SWIPE_THRESHOLD || Math.abs(velocityX) > VELOCITY_THRESHOLD) && dx !== 0) {
+        direction = dx > 0 ? -1 : 1;
+      }
+
+      const newIndex = currentIndex + direction;
+      if (direction !== 0 && newIndex >= 0 && newIndex < figures.length) {
+        const target = direction === -1 ? 0 : -(2 * (window.innerWidth + SLIDE_GAP));
+        const navDir = direction;
+        tweenAnimate(
+          [trackOffset],
+          [target],
+          ANIM_DURATION,
+          ([val]) => {
+            trackOffset = val;
+            applyTrackTransform();
+          },
+          () => completeNavigation(newIndex, navDir)
+        );
+      } else {
+        // Snap back to rest
+        tweenAnimate(
+          [trackOffset],
+          [rest],
+          ANIM_DURATION,
+          ([val]) => {
+            trackOffset = val;
+            applyTrackTransform();
+          },
+          () => {}
+        );
+      }
+    } else if (gestureState === 'vertical') {
+      if (dismissOffset > DISMISS_THRESHOLD) {
+        // Already fully faded — just tear down immediately
+        closeLightbox(false);
+      } else {
+        // Snap back
+        tweenAnimate(
+          [dismissOffset],
+          [0],
+          ANIM_DURATION,
+          ([val]) => {
+            dismissOffset = val;
+            applyTrackTransform();
+          },
+          () => {
+            dismissOffset = 0;
+            applyTrackTransform();
+          }
+        );
+      }
+    }
+
+    gestureState = 'none';
+  });
+
+  content.addEventListener('pointercancel', () => {
+    if (gestureState !== 'none') {
+      gestureState = 'none';
+      // Spring back to rest
+      const rest = restOffset();
+      tweenAnimate(
+        [trackOffset, dismissOffset],
+        [rest, 0],
+        ANIM_DURATION,
+        ([tVal, dVal]) => {
+          trackOffset = tVal;
+          dismissOffset = dVal;
+          applyTrackTransform();
+        },
+        () => {}
+      );
+    }
+  });
+
+  // === Event wiring ===
+
+  // Gallery figure clicks
   document.querySelectorAll<HTMLElement>('.masonry figure').forEach((fig) => {
     fig.addEventListener('click', () => {
+      if (isAnimating) return;
       const figures = getVisibleFigures();
       const index = figures.indexOf(fig);
       if (index !== -1) openLightbox(index);
     });
   });
 
-  closeBtn.addEventListener('click', closeLightbox);
-  prevBtn.addEventListener('click', () => navigate(-1));
-  nextBtn.addEventListener('click', () => navigate(1));
-
-  lightbox.addEventListener('click', (e) => {
-    if (e.target === lightbox) closeLightbox();
-  });
+  closeBtn.addEventListener('click', () => closeLightbox(true));
+  prevBtn.addEventListener('click', () => navigateTo(-1));
+  nextBtn.addEventListener('click', () => navigateTo(1));
 
   document.addEventListener('keydown', (e) => {
     if (!lightbox.classList.contains('open')) return;
-    if (e.key === 'Escape') closeLightbox();
-    if (e.key === 'ArrowLeft') navigate(-1);
-    if (e.key === 'ArrowRight') navigate(1);
+    if (e.key === 'Escape' || e.key === 'ArrowDown') closeLightbox(true);
+    if (e.key === 'ArrowLeft') navigateTo(-1);
+    if (e.key === 'ArrowRight') navigateTo(1);
   });
 
-  // Touch swipe support
-  let touchStartX = 0;
-  let touchStartY = 0;
-
-  lightbox.addEventListener('touchstart', (e) => {
-    touchStartX = e.touches[0].clientX;
-    touchStartY = e.touches[0].clientY;
-  }, { passive: true });
-
-  lightbox.addEventListener('touchend', (e) => {
-    const dx = e.changedTouches[0].clientX - touchStartX;
-    const dy = e.changedTouches[0].clientY - touchStartY;
-    if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy)) {
-      if (dx > 0) navigate(-1);
-      else navigate(1);
-    }
-  }, { passive: true });
+  // Recalculate on resize
+  window.addEventListener('resize', () => {
+    if (currentIndex === -1) return;
+    trackOffset = restOffset();
+    applyTrackTransform();
+  });
 </script>
