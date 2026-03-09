@@ -104,7 +104,10 @@
 
   const MAX_ORIGIN_DISTANCE = 350;
 
+  const MOBILE_BREAKPOINT = 640;
+
   function getOriginDelta(figIndex: number): { deltaX: number; deltaY: number } {
+    if (window.innerWidth > MOBILE_BREAKPOINT) return { deltaX: 0, deltaY: 0 };
     const figures = getVisibleFigures();
     if (figIndex < 0 || figIndex >= figures.length) return { deltaX: 0, deltaY: 0 };
     const fig = figures[figIndex];
