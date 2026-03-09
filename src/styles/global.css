@@ -15,11 +15,11 @@
   --chip-active-bg: #1a1a1a;
   --chip-active-text: #fff;
   --max-width: 1200px;
-  --overlay-bg: #000;
-  --overlay-text: rgba(255, 255, 255, 0.85);
-  --overlay-text-bright: #fff;
-  --overlay-text-dim: rgba(255, 255, 255, 0.45);
-  --overlay-counter: rgba(255, 255, 255, 0.5);
+  --overlay-bg: #fff;
+  --overlay-text: rgba(0, 0, 0, 0.75);
+  --overlay-text-bright: #000;
+  --overlay-text-dim: rgba(0, 0, 0, 0.45);
+  --overlay-counter: rgba(0, 0, 0, 0.5);
   --slide-gap: 40px;
 }
 
@@ -30,11 +30,11 @@ html.dark {
   --border: #333;
   --chip-active-bg: #e5e5e5;
   --chip-active-text: #111;
-  --overlay-bg: #fff;
-  --overlay-text: rgba(0, 0, 0, 0.75);
-  --overlay-text-bright: #000;
-  --overlay-text-dim: rgba(0, 0, 0, 0.45);
-  --overlay-counter: rgba(0, 0, 0, 0.5);
+  --overlay-bg: #111;
+  --overlay-text: rgba(255, 255, 255, 0.75);
+  --overlay-text-bright: #fff;
+  --overlay-text-dim: rgba(255, 255, 255, 0.45);
+  --overlay-counter: rgba(255, 255, 255, 0.5);
 }
 
 html {
@@ -238,7 +238,6 @@ html.dark .theme-toggle .icon-sun { display: block; }
   align-items: center;
   justify-content: center;
   visibility: hidden;
-  touch-action: none;
 }
 
 .lightbox::before {
@@ -256,9 +255,10 @@ html.dark .theme-toggle .icon-sun { display: block; }
 
 .lightbox-content {
   position: relative;
-  width: 100vw;
-  height: 100vh;
+  width: 100dvw;
+  height: 100dvh;
   overflow: hidden;
+  touch-action: none;
 }
 
 .lightbox-track {
@@ -268,22 +268,23 @@ html.dark .theme-toggle .icon-sun { display: block; }
 }
 
 .lightbox-slide {
-  width: 100vw;
+  width: 100dvw;
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  height: 100vh;
+  height: 100dvh;
 }
 
 .lightbox-slide img {
-  max-width: calc(100vw - 40px);
-  max-height: calc(100vh - 6rem);
+  max-width: calc(100dvw - 40px);
+  max-height: calc(100dvh - 6rem);
   object-fit: contain;
   border-radius: 4px;
   pointer-events: none;
   user-select: none;
+  transition: opacity 0.15s ease;
 }
 
 .lightbox-meta {
