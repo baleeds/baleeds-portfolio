@@ -2,6 +2,9 @@ import acadia1 from '../assets/photos/landscapes/acadial-summer16-10.jpg';
 import glacier1 from '../assets/photos/landscapes/glacier-408.jpg';
 import glacier2 from '../assets/photos/landscapes/glacier-409.jpg';
 import glacier3 from '../assets/photos/landscapes/DSCF0587-22.jpg';
+import glacier4 from '../assets/photos/landscapes/glacier-4.jpg';
+import glacier5 from '../assets/photos/landscapes/glacier-24.jpg';
+import hills1 from '../assets/photos/landscapes/hills-3.jpg';
 import grandCanyon1 from '../assets/photos/landscapes/grand-canyon-2.jpg';
 import grandCanyon2 from '../assets/photos/landscapes/grand-canyon-11.jpg';
 import grandCanyon3 from '../assets/photos/landscapes/grand-canyon-8.jpg';
@@ -109,7 +112,10 @@ export const photos: Photo[] = [
   { src: southDakota2, category: 'landscapes', alt: 'Badlands rock formations', date: '2024-05-10', shutter: '1/1100', aperture: 'f/5.6', iso: 200, focalLength: '18mm', camera: 'X-T1' },
   { src: glacier3, category: 'landscapes', alt: 'Mountain lake reflection', date: '2019-07-24', shutter: '1/800', aperture: 'f/8', iso: 200, focalLength: '84mm', camera: 'X-E1' },
   { src: glacier2, category: 'landscapes', alt: 'Rolling green hills at dawn', date: '2019-07-24', shutter: '1/640', iso: 200, focalLength: '128mm', camera: 'X-E1' },
+  { src: glacier5, category: 'landscapes', alt: 'Glacier marsh with mountain reflections', date: '2019-07-22', shutter: '1/500', aperture: 'f/8', iso: 200, focalLength: '53mm', camera: 'X-E1' },
   { src: glacier1, category: 'landscapes', alt: 'Coastal cliffs and ocean waves', date: '2019-07-22', shutter: '1/60', aperture: 'f/4', iso: 250, focalLength: '84mm', camera: 'X-E1' },
+  { src: glacier4, category: 'landscapes', alt: 'Lake shoreline with mountain peaks', date: '2019-07-20', shutter: '1/320', aperture: 'f/11', iso: 200, focalLength: '53mm', camera: 'X-E1' },
+  { src: hills1, category: 'landscapes', alt: 'Winding road through winter hills at sunset', date: '2018-03-23', shutter: '1/60', aperture: 'f/13', iso: 200, focalLength: '84mm', camera: 'X-E1' },
   { src: kauai4, category: 'landscapes', alt: 'Tropical landscape at golden hour', date: '2017-08-24', shutter: '1/60', aperture: 'f/6.4', iso: 400, focalLength: '53mm', camera: 'X-E1' },
   { src: kauai3, category: 'landscapes', alt: 'Ocean cliffs and surf', date: '2017-08-22', shutter: '1/125', aperture: 'f/8', iso: 200, focalLength: '53mm', camera: 'X-E1' },
   { src: kauai2, category: 'landscapes', alt: 'Lush green valley', date: '2017-08-20', shutter: '5s', iso: 200, focalLength: '128mm', camera: 'X-E1' },
